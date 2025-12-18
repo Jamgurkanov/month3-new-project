@@ -21,20 +21,32 @@ def add_task(task):
     return task_id
 
 
-def get_task():
+def get_tasks(filter_type): 
     conn = sqlite3.connect(path_db)
     cursor = conn.cursor()
-    cursor.execute(queries.SELECT_TASKS)
-    conn.commit()
+
+    if filter_type == 'completed':
+        cursor.execute(queries.SELECT_TASKS_COMPLETED)
+    elif filter_type == 'uncompleted':
+        cursor.execute(queries.SELECT_TASKS_UNCOMPLETED)
+    else:
+        cursor.execute(queries.SELECT_TASKS)
+
     tasks = cursor.fetchall()
     conn.close()
     return tasks
 
 
-def update_task(task_id, new_task):
+def update_task(task_id, new_task=None, completed=None):
     conn = sqlite3.connect(path_db)
     cursor = conn.cursor()
-    cursor.execute(queries.UPDATE_TASKS, (new_task, task_id))
+    
+    if new_task is not None:
+        cursor.execute(queries.UPDATE_TASKS, (new_task, task_id))
+        
+    if completed is not None:
+        cursor.execute("UPDATE tasks SET completed = ? WHERE id = ?", (completed, task_id))
+
     conn.commit()
     conn.close()
 
@@ -43,5 +55,12 @@ def delete_task(task_id):
     conn = sqlite3.connect(path_db)
     cursor = conn.cursor()
     cursor.execute(queries.DELETE_TASKS, (task_id, ))
+    conn.commit()
+    conn.close()
+
+def delete_completed_tasks():
+    conn = sqlite3.connect(path_db)
+    cursor = conn.cursor()
+    cursor.execute(queries.DELETE_COMPLETED_TASKS)
     conn.commit()
     conn.close()
